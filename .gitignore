@@ -3,6 +3,7 @@ phpunit.xml
 .travis.yml
 /bin
 tests/mocks/env/
+phpunit.xml.dist
 
 # Sass cache
 .sass-cache/
