@@ -1,9 +1,9 @@
 # Unit tests config
 phpunit.xml
+phpunit.xml.dist
 .travis.yml
 /bin
 tests/mocks/env/
-phpunit.xml.dist
 
 # Sass cache
 .sass-cache/
