@@ -67,8 +67,8 @@ class Theme {
 	 * @param Fulcrum_Contract $fulcrum Instance of Fulcrum
 	 */
 	public function __construct( Config_Contract $config, Fulcrum_Contract $fulcrum = null ) {
-		$this->config      = $config;
-		$this->fulcrum     = is_null( $fulcrum ) ? Fulcrum::getFulcrum() : $fulcrum;
+		$this->config  = $config;
+		$this->fulcrum = is_null( $fulcrum ) ? Fulcrum::getFulcrum() : $fulcrum;
 
 
 		$this->init_pre();
@@ -130,6 +130,21 @@ class Theme {
 	 *********************/
 
 	/**
+	 * Let's enqueue the theme's script(s)
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $scripts_config
+	 *
+	 * @return void
+	 */
+	protected function enqueue_scripts( array $scripts_config ) {
+		foreach( $scripts_config as $handle => $config ) {
+			$this->fulcrum['provider.asset']->register( $config, $handle );
+		}
+	}
+
+	/**
 	 * Register Google Fonts.
 	 *
 	 * @since 1.0.0
@@ -140,7 +155,7 @@ class Theme {
 	 */
 	protected function google_fonts( array $config ) {
 
-		$unique_id =  $this->config->theme_slug . '_' . $config['handle'];
+		$unique_id = $this->config->theme_slug . '_' . $config['handle'];
 
 		if ( $this->fulcrum->has( $unique_id ) ) {
 			return;
@@ -187,7 +202,7 @@ class Theme {
 	 * @return string
 	 */
 	protected function favicon( $favicon_url ) {
-		add_filter( 'genesis_pre_load_favicon', function() use ( $favicon_url ) {
+		add_filter( 'genesis_pre_load_favicon', function () use ( $favicon_url ) {
 			return $favicon_url;
 		} );
 	}
@@ -195,6 +210,33 @@ class Theme {
 	/**********************
 	 * Theme Setup Tasks
 	 *********************/
+
+	/**
+	 * Add image sizes.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $config
+	 *
+	 * @return void
+	 */
+	protected function add_image_size( array $config ) {
+		foreach ( $config as $name => $parameters ) {
+			if ( ! is_array( $parameters ) ) {
+				continue;
+			}
+
+			if ( ! isset( $parameters['width'] ) || ! isset( $parameters['height'] ) ) {
+				continue;
+			}
+
+			$width  = (int) $parameters['width'];
+			$height = (int) $parameters['height'];
+			$crop   = isset( $parameters['crop'] ) ? $parameters['crop'] : false;
+
+			add_image_size( $name, $width, $height, $crop );
+		}
+	}
 
 	/**
 	 * Add theme supports.
@@ -206,7 +248,7 @@ class Theme {
 	 * @return void
 	 */
 	protected function add_theme_support( array $config ) {
-		foreach( $config as $feature => $parameters ) {
+		foreach ( $config as $feature => $parameters ) {
 			if ( is_null( $parameters ) ) {
 				add_theme_support( $feature );
 			} else {
@@ -225,7 +267,7 @@ class Theme {
 	 * @return void
 	 */
 	protected function genesis_unregister_layout( array $config ) {
-		foreach( $config as $layout ) {
+		foreach ( $config as $layout ) {
 			genesis_unregister_layout( $layout );
 		}
 	}
@@ -235,9 +277,14 @@ class Theme {
 	 *
 	 * @since 1.0.0
 	 *
+	 * @param bool $ok_to_disable_it When set to true, the `edit_post_link` is disabled.
+	 * 
 	 * @return void
 	 */
-	protected function disable_edit_link() {
+	protected function disable_edit_link( $ok_to_disable_it = false ) {
+		if ( ! $ok_to_disable_it ) {
+			return;
+		}
 		add_filter( 'edit_post_link', '__return_empty_string' );
 	}
 
@@ -251,11 +298,57 @@ class Theme {
 	 * @return array Amended recognised page templates.
 	 */
 	protected function remove_page_templates( array $page_templates ) {
-		add_filter( 'theme_page_templates', function() use ( $page_templates ) {
+		add_filter( 'theme_page_templates', function () use ( $page_templates ) {
 			unset( $page_templates['page_blog.php'] );
 
 			return $page_templates;
 		} );
+	}
+
+	/**
+	 * Register sidebars.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $config
+	 *
+	 * @return void
+	 */
+	protected function register_sidebars( array $config ) {
+		foreach ( $config as $sidebar ) {
+			genesis_register_sidebar( $sidebar );
+		}
+	}
+
+	/**
+	 * Unregister sidebars.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $config Array of sidebars to unregister
+	 *
+	 * @return void
+	 */
+	protected function unregister_sidebars( array $config ) {
+		foreach ( $config as $sidebar ) {
+			unregister_sidebar( $sidebar );
+		}
+	}
+
+	/**
+	 * Enable shortcodes in the WordPress default text widget when configured.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param bool $is_enabled When true, shortcodes are enabled for the text widget.
+	 *
+	 * @return void
+	 */
+	protected function do_shortcodes_in_text_widget( $is_enabled = false ) {
+		if ( ! $is_enabled ) {
+			return;
+		}
+		add_filter( 'widget_text', 'do_shortcode' );
 	}
 
 	/**********************
@@ -277,7 +370,7 @@ class Theme {
 			return false;
 		}
 
-		foreach( $this->config->$config_key as $task => $task_config ) {
+		foreach ( $this->config->$config_key as $task => $task_config ) {
 			$method_name = $method_prefix . $task;
 
 			$this->$method_name( $task_config );

@@ -1,6 +1,6 @@
 {
     "name" 			: "knowthecode/fulcrum",
-    "description" 	: "Fulcrum Plugin - The customization center to extend and custom WordPress. This plugin provides the centralized infrastructure for the custom plugins and theme.",
+    "description" 	: "Fulcrum - The central custom repository for WordPress. This plugin provides the centralized infrastructure for the custom plugins and theme.",
     "type"          : "project",
     "keywords" 		: ["wordpress", "wp", "plugin"],
     "homepage" 		: "https://knowthecode.io",
