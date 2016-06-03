@@ -34,29 +34,43 @@ class Theme {
 	protected $fulcrum;
 
 	/**
-	 * Array of configured providers
+	 * Instance of the theme.
 	 *
-	 * @var array
+	 * @var \WP_Theme
 	 */
-	protected $providers = array();
+	protected $child_theme;
 
 	/**
-	 * Addon plugin file.
+	 * Path to the child theme root folder
+	 * 
+	 * @var string
+	 */
+	protected $child_theme_dir;
+
+	/**
+	 * Child theme root URL
 	 *
 	 * @var string
 	 */
-	protected $plugin_file;
-
-	/**
-	 * Flag for if the flush_rewrite_rules is required.
-	 *
-	 * @var bool
-	 */
-	protected $is_flush_rewrite_rules_required = false;
+	protected $child_theme_url;
 
 	/*************************
 	 * Instantiate & Init
 	 ************************/
+
+	/**
+	 * Instantiate the plugin
+	 *
+	 *
+	 * So all we want to do here is get the theme up and running by
+	 * setting up the base properties and constants.
+	 *
+	 * @since 1.0.0
+	 */
+	public function __construct() {
+		$this->init_properties();
+		$this->init_constants();
+	}
 
 	/**
 	 * Instantiate the plugin
@@ -66,13 +80,56 @@ class Theme {
 	 * @param Config_Contract $config Runtime configuration parameters
 	 * @param Fulcrum_Contract $fulcrum Instance of Fulcrum
 	 */
-	public function __construct( Config_Contract $config, Fulcrum_Contract $fulcrum = null ) {
+	public function init( Config_Contract $config, Fulcrum_Contract $fulcrum = null ) {
 		$this->config  = $config;
 		$this->fulcrum = is_null( $fulcrum ) ? Fulcrum::getFulcrum() : $fulcrum;
 
-
 		$this->init_pre();
 		$this->init_events();
+	}
+
+	/**
+	 * Initialize the properties.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	protected function init_properties() {
+		$this->child_theme = wp_get_theme();
+		$this->child_theme_dir = get_stylesheet_directory();
+		$this->child_theme_url = get_stylesheet_directory_uri();
+	}
+
+	/**
+	 * Initialize the constants.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	protected function init_constants() {
+		define( 'CHILD_THEME_NAME', $this->child_theme->Name );
+		define( 'CHILD_THEME_URL', $this->child_theme_url );
+		define( 'CHILD_THEME_VERSION', $this->get_theme_version() );
+
+		if ( ! defined( 'CHILD_THEME_DIR' ) ) {
+			define( 'CHILD_THEME_DIR', $this->child_theme_dir );
+		}
+		define( 'CHILD_DIST_URL', $this->child_theme_url . '/assets/dist/' );
+	}
+
+	/**
+	 * Get the theme version based upon if this is a development environment or not.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return int|string
+	 */
+	protected function get_theme_version() {
+		return fulcrum_is_dev_environment()
+			? filemtime( $this->child_theme_dir . '/style.css' )
+			: $this->child_theme->Version;
 	}
 
 	/**

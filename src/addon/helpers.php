@@ -26,10 +26,9 @@ use Fulcrum\Fulcrum;
 function init_theme( $config, $unique_id = 'theme' ) {
 	$fulcrum = Fulcrum::getFulcrum();
 
-	$fulcrum[ $unique_id ] = $instance = new Theme(
-		new Config( $config ),
-		$fulcrum
-	);
+	$fulcrum[ $unique_id ] = $instance = new Theme();
+	
+	$instance->init( new Config( $config ), $fulcrum );
 
 	return $instance;
 }
